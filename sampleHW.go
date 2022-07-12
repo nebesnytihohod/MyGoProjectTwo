@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-func hello(res http.ResponseWriter, req *http.Request) {
+func drafthello(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(res, "Hello, World and Max!")
 }
 
-func main() {
+func draftmain() {
 	http.HandleFunc("/", hello)
 	http.ListenAndServe("localhost:4000", nil)
 
