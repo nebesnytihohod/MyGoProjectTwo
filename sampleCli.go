@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 type appConfiguration1 struct {
@@ -92,6 +94,14 @@ func goodbye(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	fmt.Println("Outside a goroutine.")
+
+	go func() { //Обьявление анонимной функции ии вызов ее как сопрограммы
+		fmt.Println("Inside a goroutine.")
+	}()
+
+	fmt.Println("Outside a goroutine again.")
+
 	/*	app := cli.NewApp()
 		app.Usage = "Count up or down."
 		app.Commands = []cli.Command{ // Определение одной или нескольких команд
@@ -134,6 +144,7 @@ func main() {
 
 		app.Run(os.Args)*/
 
+	// конфиг в JSON - начало
 	configFileJson, _ := os.Open("config.json")
 	defer configFileJson.Close()
 
@@ -143,32 +154,58 @@ func main() {
 	if err != nil {
 		fmt.Println("Error in config JSON:", err)
 	}
-
+	// конфиг в JSON - конец
 	fmt.Println("[JSON] Enabled:", appConf1.Enabled)
 	fmt.Println("[JSON] Path:", appConf1.Path)
 
+	// конфиг в YAML - начало
 	configFileYaml, err := yaml.ReadFile("config.yaml")
 	if err != nil {
 		fmt.Println("Error in config YAML:", err)
 	}
 	enabled, _ := configFileYaml.GetBool("enable")
 	path, _ := configFileYaml.Get("path")
+	// конфиг в YAML - конец
 	fmt.Println("[YAML] Enabled:", enabled)
 	fmt.Println("[YAML] Path", path)
 
+	// конфиг в INI - начало
 	appConf2 := appConfiguration2{}
 	err = gcfg.ReadFileInto(&appConf2, "config.ini")
 	if err != nil {
 		fmt.Println("Error in config INI:", err)
 	}
+	// конфиг в INI - конец
 	fmt.Println("[INI] Enabled:", appConf2.Section1.Enabled)
 	fmt.Println("[INI] Path:", appConf2.Section1.Path)
 	fmt.Println("[INI] Name:", appConf2.Section2.Name)
 	fmt.Println("[INI] Surame:", appConf2.Section2.Surname)
 
+	runtime.Gosched() // Обращение к планировщику
+
+	var waitGroup sync.WaitGroup // Обьявлени переменной счетчика группы ожидания
+	var i int = -1
+	var cliArg string
+
+	fmt.Println(os.Args)
+
+	for i, cliArg = range os.Args[1:] { // Примитивный способ считывания аргументов вызова программы
+		fmt.Println(i, " "+cliArg)
+		waitGroup.Add(1)      // Добавляем к счетчику 1 для подсчета числа запускаемых сопрограмм
+		go func(cla string) { // Некая функция чтобы что-то сделать полезное
+			fmt.Println(cla) // Тут что-то делаем
+			waitGroup.Done() // Сообщаем, что выполнение сопрограммы завершено когда функция заканчивает свою работу
+		}(cliArg)
+	}
+
+	waitGroup.Wait() // Внещняя сопрограмма ожидает пока все вызванные внутри нее сопрограммы заверщат свою работу (вызовут waitGroup.Done(), и счетчик запусков обнулится
+
+	fmt.Printf("Printed %d cli arguments\n", i+1)
+
+	// Использование разных вариантов web-сервера
 	//http.HandleFunc("/", hello) //регистация, создание обработчика пути
 	//http.ListenAndServe("localhost:4000", nil)
-	fmt.Println("port:", os.Getenv("MYPORT"))
+	fmt.Println("port:", os.Getenv("MYPORT")) // использование переменных среды ОС
 	//http.ListenAndServe("localhost"+":"+os.Getenv("MYPORT"), nil)
 	//http.ListenAndServe(":"+os.Getenv("MYPORT"), nil) // запуск сервера
 
