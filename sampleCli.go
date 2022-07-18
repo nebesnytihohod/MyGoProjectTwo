@@ -102,48 +102,6 @@ func main() {
 
 	fmt.Println("Outside a goroutine again.")
 
-	/*	app := cli.NewApp()
-		app.Usage = "Count up or down."
-		app.Commands = []cli.Command{ // Определение одной или нескольких команд
-			{
-				Name: "up", ShortName: "u",
-				Usage: "Count Up",
-				// Определение параметров команды
-				Flags: []cli.Flag{
-					cli.IntFlag{
-						Name: "stop, s",
-						Usage: "Value to count up to",
-						Value: 10,
-					},
-				},
-			},
-			Action: func(c *cli.Context) error {
-				start := c.Int("stop") // Получение параметра команды
-
-				return nil
-			},
-		},
-		{
-			Name:"down", ShortName: "d",
-			Usage: "Count Down",
-			Flags: []cli.Flag{
-				cli.IntFlag{
-					Name:  "start, s",
-					Usage: "Start counting down from",
-					Value: 10,
-				},
-			},
-		},
-			Action: func(c *cli.Context) error {
-			start := c.Int("start")
-
-			}
-			return nil
-			},
-		},
-
-		app.Run(os.Args)*/
-
 	// конфиг в JSON - начало
 	configFileJson, _ := os.Open("config.json")
 	defer configFileJson.Close()
@@ -198,7 +156,7 @@ func main() {
 		}(cliArg)
 	}
 
-	waitGroup.Wait() // Внещняя сопрограмма ожидает пока все вызванные внутри нее сопрограммы заверщат свою работу (вызовут waitGroup.Done(), и счетчик запусков обнулится
+	waitGroup.Wait() // Внешняя сопрограмма ожидает пока все вызванные внутри нее сопрограммы заверщат свою работу (вызовут waitGroup.Done(), и счетчик запусков обнулится
 
 	fmt.Printf("Printed %d cli arguments\n", i+1)
 
