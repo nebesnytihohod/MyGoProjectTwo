@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-gcfg/gcfg"
+	"github.com/joho/godotenv"
 	"github.com/kylelemons/go-gypsy/yaml"
+	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -94,13 +96,24 @@ func goodbye(res http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	logFile, _ := os.Create("./log.txt")
+	defer logFile.Close()
+
+	logger := log.New(logFile, "[myAppLog]: ", log.LstdFlags|log.Lshortfile)
+
 	fmt.Println("Outside a goroutine.")
+	log.Println("[LOG] Outside a goroutine.") // Вариант с простым логгером для сравнения
+	logger.Println("Outside a goroutine.")    // Вариант с продвинутым логгером для сравнения
 
 	go func() { //Обьявление анонимной функции ии вызов ее как сопрограммы
 		fmt.Println("Inside a goroutine.")
+		log.Println("[LOG] Inside a goroutine.")
+		logger.Println("Inside a goroutine.")
 	}()
 
 	fmt.Println("Outside a goroutine again.")
+	log.Println("[LOG] Outside a goroutine again.")
+	logger.Println("Outside a goroutine again.")
 
 	// конфиг в JSON - начало
 	configFileJson, _ := os.Open("config.json")
@@ -166,6 +179,18 @@ func main() {
 	fmt.Println("port:", os.Getenv("MYPORT")) // использование переменных среды ОС
 	//http.ListenAndServe("localhost"+":"+os.Getenv("MYPORT"), nil)
 	//http.ListenAndServe(":"+os.Getenv("MYPORT"), nil) // запуск сервера
+
+	//errEnv := godotenv.Load() // load .env-file from default path
+	errEnv := godotenv.Load("specenv.env") // load enf-file from specified path
+	if errEnv != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	s3Bucket := os.Getenv("S3_BUCKET")
+	secretKey := os.Getenv("SECRET_KEY")
+
+	fmt.Println("S3 bucket: ", s3Bucket)
+	fmt.Println("secret key: ", secretKey)
 
 	pathRes := newPathResolver()                                 // получение экземпляра маршрутизатора
 	pathRes.Add("GET /hello", hello)                             // регистрация пути к endpoint и его функции

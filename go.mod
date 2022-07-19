@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/go-gcfg/gcfg v1.2.3
+	github.com/joho/godotenv v1.4.0
 	github.com/kylelemons/go-gypsy v1.0.0
 )
 
