@@ -6,9 +6,11 @@ import (
 	"github.com/go-gcfg/gcfg"
 	"github.com/joho/godotenv"
 	"github.com/kylelemons/go-gypsy/yaml"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"os/exec"
 	"regexp"
 	"runtime"
 	"strings"
@@ -29,6 +31,16 @@ type appConfiguration2 struct {
 		Name    string
 		Surname string
 	}
+}
+
+// функция для проверки существования нужной библиотеки (зависимости) в составе среды выполнения
+func checkDependency(name string) error {
+	_, err := exec.LookPath(name)
+	if err != nil {
+		depErr := "Could not find necessary dependency '%s' in PATH %s"
+		return fmt.Errorf(depErr, name, err)
+	}
+	return nil
 }
 
 //func hello(res http.ResponseWriter, req *http.Request) {
@@ -95,11 +107,36 @@ func goodbye(res http.ResponseWriter, req *http.Request) {
 	fmt.Fprint(res, "\n[LOG]URL path: ", path, "\n")
 }
 
+type Page struct { // описание структуры переменных частей в шаблоне
+	Title, Content string
+}
+
+// функция для обработки endpoint - home
+func home(res http.ResponseWriter, req *http.Request) {
+	page := &Page{
+		Title:   "My Homepage",
+		Content: "My BIO",
+	}
+
+	t := template.Must(template.ParseFiles("home.html"))
+	t.Execute(res, page)
+}
+
 func main() {
 	logFile, _ := os.Create("./log.txt")
 	defer logFile.Close()
 
 	logger := log.New(logFile, "[myAppLog]: ", log.LstdFlags|log.Lshortfile)
+
+	// проверка наличия нужной для работы программы внешней зависимости
+	errCheckDep := checkDependency("")
+	if errCheckDep != nil {
+		//log.Fatalln(errCheckDep)
+		log.Println(errCheckDep)
+	}
+
+	log.Println("Number of CPU's: ", runtime.NumCPU())
+	log.Println("Number of goroutines:", runtime.NumGoroutine())
 
 	fmt.Println("Outside a goroutine.")
 	log.Println("[LOG] Outside a goroutine.") // Вариант с простым логгером для сравнения
@@ -195,6 +232,7 @@ func main() {
 	pathRes := newPathResolver()                                 // получение экземпляра маршрутизатора
 	pathRes.Add("GET /hello", hello)                             // регистрация пути к endpoint и его функции
 	pathRes.Add("(GET|HEAD) /goodbye(/?[A-Za-z0-9]*)?", goodbye) // регистрация пути к endpoint и его функции
+	pathRes.Add("GET /home", home)                               // регистрация пути к endpoint и его функции
 	http.ListenAndServe(":"+os.Getenv("MYPORT"), pathRes)        // запуск сервера
 
 }
