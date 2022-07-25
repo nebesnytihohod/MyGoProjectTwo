@@ -126,7 +126,7 @@ func main() {
 	logFile, _ := os.Create("./log.txt")
 	defer logFile.Close()
 
-	logger := log.New(logFile, "[myAppLog]: ", log.LstdFlags|log.Lshortfile)
+	logger := log.New(logFile, "[myAppLog]: ", log.LstdFlags|log.Lshortfile) // logging into file
 
 	// проверка наличия нужной для работы программы внешней зависимости
 	errCheckDep := checkDependency("")
@@ -135,6 +135,7 @@ func main() {
 		log.Println(errCheckDep)
 	}
 
+	// Runtime monitoring and statistic
 	log.Println("Number of CPU's: ", runtime.NumCPU())
 	log.Println("Number of goroutines:", runtime.NumGoroutine())
 
